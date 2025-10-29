@@ -39,7 +39,7 @@ function Header() {
               Home
             </Link>
             <Link
-              href="https://github.com"
+              href="https://github.com/raulgupta/growqr"
               target="_blank"
               className="text-sm text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
@@ -58,11 +58,11 @@ function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-sm text-slate-600 dark:text-slate-400">
-            &copy; {new Date().getFullYear()} Growqr. AI-powered TED Talk analysis.
+            &copy; {new Date().getFullYear()} Growqr. AI-powered video analysis.
           </div>
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com"
+              href="https://github.com/raulgupta/growqr"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -97,6 +97,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900`}
+        suppressHydrationWarning
       >
         <Header />
         <main className="flex-1">

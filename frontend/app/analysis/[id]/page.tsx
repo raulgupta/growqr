@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
@@ -61,6 +61,7 @@ export default function AnalysisPage() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const lastUpdateRef = useRef<number>(0);
 
   // Load analysis data from sessionStorage or backend
   useEffect(() => {
@@ -106,10 +107,17 @@ export default function AnalysisPage() {
     loadData();
   }, [params.id]);
 
-  // Handle video time updates
+  // Handle video time updates (throttled to prevent excessive re-renders)
   const handleTimeUpdate = () => {
     if (videoRef.current) {
-      setCurrentTime(Math.floor(videoRef.current.currentTime));
+      const now = Date.now();
+      const newTime = Math.floor(videoRef.current.currentTime);
+
+      // Only update if time has changed AND at least 250ms has passed
+      if (newTime !== currentTime && now - lastUpdateRef.current >= 250) {
+        setCurrentTime(newTime);
+        lastUpdateRef.current = now;
+      }
     }
   };
 
@@ -143,21 +151,21 @@ export default function AnalysisPage() {
     }
   };
 
-  const getCurrentEmotion = (): Emotion => {
+  const currentEmotion = useMemo((): Emotion => {
     if (!analysisData?.emotions?.length) return { emotion: 'neutral', confidence: 0, time: 0 };
     const current = analysisData.emotions.find((e, i) => {
       const next = analysisData.emotions[i + 1];
       return currentTime >= e.time && (!next || currentTime < next.time);
     });
     return current || analysisData.emotions[0];
-  };
+  }, [analysisData?.emotions, currentTime]);
 
-  const getRecentGestures = (): Gesture[] => {
+  const recentGestures = useMemo((): Gesture[] => {
     if (!analysisData?.gestures) return [];
     return analysisData.gestures.filter(
       (g) => currentTime >= g.time && currentTime < g.time + 10
     );
-  };
+  }, [analysisData?.gestures, currentTime]);
 
   // Get unique emotions and map them to Y-axis values (memoized to avoid recalculation)
   const emotionChartData = analysisData ? (() => {
@@ -385,19 +393,19 @@ export default function AnalysisPage() {
                     Emotion
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="text-3xl">{getEmotionEmoji(getCurrentEmotion().emotion)}</span>
+                    <span className="text-3xl">{getEmotionEmoji(currentEmotion.emotion)}</span>
                     <span className="font-semibold text-slate-900 dark:text-white capitalize">
-                      {getCurrentEmotion().emotion}
+                      {currentEmotion.emotion}
                     </span>
                   </div>
                 </div>
 
-                {getRecentGestures().length > 0 && (
+                {recentGestures.length > 0 && (
                   <div>
                     <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                       Recent Gestures
                     </p>
-                    {getRecentGestures().map((gesture: Gesture, i: number) => (
+                    {recentGestures.map((gesture: Gesture, i: number) => (
                       <div
                         key={i}
                         className="text-sm bg-slate-50 dark:bg-slate-700 p-2 rounded mb-2"

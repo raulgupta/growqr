@@ -46,10 +46,14 @@ Thumbs.db
 # Uploads and results
 backend/uploads/
 backend/results/
+backend/results_archive/
 *.mp4
 *.avi
 *.mov
 *.wav
+
+# Alembic
+backend/alembic/versions/__pycache__/
 
 # Environment variables
 .env

@@ -12,3 +12,7 @@ anthropic>=0.30.0
 python-dotenv>=1.0.0
 Pillow>=10.0.0
 moviepy>=1.0.3
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.13.0
+pydantic-settings>=2.0.0

@@ -2,6 +2,8 @@
 
 A comprehensive AI-powered platform for analyzing presentation videos using computer vision, speech recognition, and large language models.
 
+> **🗄️ Database Migration:** GrowQR now uses PostgreSQL for production-ready data storage! See [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) for setup instructions.
+
 ## Overview
 
 This application analyzes presentation videos to extract multiple layers of insight:
