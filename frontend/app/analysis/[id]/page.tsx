@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { QrCode } from 'lucide-react';
@@ -52,6 +52,97 @@ interface AnalysisData {
   llm_insights: LLMInsights;
 }
 
+// Memoized Emotion Timeline Chart Component
+// This prevents re-renders during video playback since the chart data doesn't change
+const EmotionTimelineChart = memo(({
+  chartData,
+  uniqueEmotions,
+  totalDuration
+}: {
+  chartData: Array<{
+    time: number;
+    emotionValue: number;
+    emotion: string;
+    emoji: string;
+    confidence: number;
+  }>;
+  uniqueEmotions: string[];
+  totalDuration: number;
+}) => {
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-500">
+        Emotion Timeline
+      </h2>
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 10, right: 30, left: 60, bottom: 20 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} vertical={false} />
+            <XAxis
+              dataKey="time"
+              stroke="#6b7280"
+              tick={{ fill: '#9ca3af', fontSize: 12 }}
+              label={{ value: 'Time (seconds)', position: 'insideBottom', offset: -10, fill: '#6b7280', fontSize: 12 }}
+              domain={[0, totalDuration]}
+              type="number"
+              tickFormatter={(value) => Math.round(value).toString()}
+            />
+            <YAxis
+              stroke="#6b7280"
+              tick={(props: { x?: number; y?: number; payload?: { value: number } }) => {
+                const { x = 0, y = 0, payload } = props;
+                const emotionName = payload ? uniqueEmotions[payload.value] : undefined;
+                if (emotionName) {
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text x={0} y={0} dy={4} textAnchor="end" fill="#9ca3af" fontSize={12}>
+                        {getEmotionEmoji(emotionName)} {emotionName}
+                      </text>
+                    </g>
+                  );
+                }
+                return <g />;
+              }}
+              domain={[0, Math.max(0, uniqueEmotions.length - 1)]}
+              ticks={Array.from({ length: uniqueEmotions.length }, (_, i) => i)}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#f3f4f6',
+                padding: '8px 12px',
+                fontSize: '14px'
+              }}
+              formatter={(_value: number, _name: string, props: { payload?: { emoji: string; emotion: string; confidence: number } }) => {
+                if (!props.payload) return ['', ''];
+                return [
+                  `${props.payload.emoji} ${props.payload.emotion}`,
+                  `Confidence: ${(props.payload.confidence * 100).toFixed(0)}%`
+                ];
+              }}
+              labelFormatter={(label) => `${label}s`}
+            />
+            <Line
+              type="stepAfter"
+              dataKey="emotionValue"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, fill: '#3b82f6' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+});
+
+EmotionTimelineChart.displayName = 'EmotionTimelineChart';
 
 export default function AnalysisPage() {
   const params = useParams();
@@ -62,7 +153,7 @@ export default function AnalysisPage() {
   const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const lastUpdateRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
 
   // Load analysis data from sessionStorage or backend
   useEffect(() => {
@@ -108,24 +199,44 @@ export default function AnalysisPage() {
     loadData();
   }, [params.id]);
 
-  // Handle video time updates (throttled to prevent excessive re-renders)
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      const now = Date.now();
-      const newTime = Math.floor(videoRef.current.currentTime);
-
-      // Only update if time has changed AND at least 250ms has passed
-      if (newTime !== currentTime && now - lastUpdateRef.current >= 250) {
-        setCurrentTime(newTime);
-        lastUpdateRef.current = now;
+  // Sync current time with video using requestAnimationFrame for smooth updates
+  useEffect(() => {
+    const updateTime = () => {
+      if (videoRef.current && !videoRef.current.paused) {
+        const roundedTime = Math.round(videoRef.current.currentTime);
+        // Only update state if the rounded time has actually changed
+        setCurrentTime(prevTime => {
+          if (prevTime !== roundedTime) {
+            return roundedTime;
+          }
+          return prevTime;
+        });
+        animationFrameRef.current = requestAnimationFrame(updateTime);
       }
+    };
+
+    if (isPlaying) {
+      animationFrameRef.current = requestAnimationFrame(updateTime);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isPlaying]);
+
+  // Handle video time updates for manual seeking
+  const handleTimeUpdate = () => {
+    if (videoRef.current && videoRef.current.paused) {
+      setCurrentTime(Math.round(videoRef.current.currentTime));
     }
   };
 
   // Handle when video metadata is loaded
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(Math.floor(videoRef.current.duration));
+      setDuration(Math.round(videoRef.current.duration));
     }
   };
 
@@ -148,7 +259,7 @@ export default function AnalysisPage() {
       const pos = (e.clientX - rect.left) / rect.width;
       const time = pos * duration;
       videoRef.current.currentTime = time;
-      setCurrentTime(Math.floor(time));
+      setCurrentTime(Math.round(time));
     }
   };
 
@@ -188,8 +299,21 @@ export default function AnalysisPage() {
       confidence: e.confidence,
     }));
 
+    // Extend the chart to the full video duration by adding the last emotion at the end
+    const totalDuration = analysisData.summary?.total_duration || 0;
+    const lastEmotion = analysisData.emotions[analysisData.emotions.length - 1];
+    if (lastEmotion && totalDuration > lastEmotion.time) {
+      chartData.push({
+        time: totalDuration,
+        emotionValue: emotionMap[lastEmotion.emotion],
+        emotion: lastEmotion.emotion,
+        emoji: getEmotionEmoji(lastEmotion.emotion),
+        confidence: lastEmotion.confidence,
+      });
+    }
+
     return { data: chartData, emotionMap, uniqueEmotions };
-  }, [analysisData?.emotions]);
+  }, [analysisData?.emotions, analysisData?.summary?.total_duration]);
 
   if (loading) {
     return (
@@ -293,73 +417,12 @@ export default function AnalysisPage() {
               </div>
             </div>
 
-            {/* Emotion Timeline Chart */}
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-500">
-                Emotion Timeline
-              </h2>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={emotionChartData.data}
-                    margin={{ top: 10, right: 30, left: 60, bottom: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} vertical={false} />
-                    <XAxis
-                      dataKey="time"
-                      stroke="#6b7280"
-                      tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      label={{ value: 'Time (seconds)', position: 'insideBottom', offset: -10, fill: '#6b7280', fontSize: 12 }}
-                    />
-                    <YAxis
-                      stroke="#6b7280"
-                      tick={(props: { x?: number; y?: number; payload?: { value: number } }) => {
-                        const { x = 0, y = 0, payload } = props;
-                        const emotionName = payload ? emotionChartData.uniqueEmotions[payload.value] : undefined;
-                        if (emotionName) {
-                          return (
-                            <g transform={`translate(${x},${y})`}>
-                              <text x={0} y={0} dy={4} textAnchor="end" fill="#9ca3af" fontSize={12}>
-                                {getEmotionEmoji(emotionName)} {emotionName}
-                              </text>
-                            </g>
-                          );
-                        }
-                        return <g />;
-                      }}
-                      domain={[0, Math.max(0, emotionChartData.uniqueEmotions.length - 1)]}
-                      ticks={Array.from({ length: emotionChartData.uniqueEmotions.length }, (_, i) => i)}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        color: '#f3f4f6',
-                        padding: '8px 12px',
-                        fontSize: '14px'
-                      }}
-                      formatter={(_value: number, _name: string, props: { payload?: { emoji: string; emotion: string; confidence: number } }) => {
-                        if (!props.payload) return ['', ''];
-                        return [
-                          `${props.payload.emoji} ${props.payload.emotion}`,
-                          `Confidence: ${(props.payload.confidence * 100).toFixed(0)}%`
-                        ];
-                      }}
-                      labelFormatter={(label) => `${label}s`}
-                    />
-                    <Line
-                      type="stepAfter"
-                      dataKey="emotionValue"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={false}
-                      activeDot={{ r: 4, fill: '#3b82f6' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            {/* Emotion Timeline Chart - Memoized to prevent re-renders during video playback */}
+            <EmotionTimelineChart
+              chartData={emotionChartData.data}
+              uniqueEmotions={emotionChartData.uniqueEmotions}
+              totalDuration={analysisData.summary?.total_duration || 0}
+            />
 
             {/* Transcript */}
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">

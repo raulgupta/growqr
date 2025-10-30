@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import Image from "next/image";
 import { QrCode, ExternalLink, BookOpen, Shield } from "lucide-react";
 import "./globals.css";
 
@@ -28,7 +29,13 @@ function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <QrCode className="text-blue-600 dark:text-blue-500" size={28} />
+            <Image
+              src="/logo.png"
+              alt="Growqr Logo"
+              width={28}
+              height={28}
+              className="object-contain"
+            />
             <div className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Growqr
             </div>

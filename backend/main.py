@@ -179,8 +179,8 @@ def process_video_background(analysis_id: UUID, video_id: UUID, video_path: Path
         # 4. Save to database
         add_progress(str(analysis_id), "💾 Saving results to database...")
 
-        # Calculate total duration
-        total_duration = max([e["time"] for e in emotion_data]) if emotion_data else 0
+        # Calculate total duration from actual video duration (not from emotion timestamps)
+        total_duration = video_processor.get_video_duration(str(video_path))
         crud.set_analysis_duration(db, analysis_id, total_duration)
 
         # Save emotions
@@ -243,7 +243,7 @@ def process_video_background(analysis_id: UUID, video_id: UUID, video_path: Path
         add_progress(str(analysis_id), "✅ Analysis completed successfully!")
 
         # Also save results to in-memory cache for backwards compatibility
-        correlated_data = correlate_analysis(emotion_data, gesture_data, transcript, llm_insights)
+        correlated_data = correlate_analysis(emotion_data, gesture_data, transcript, llm_insights, total_duration)
         analysis_results[str(analysis_id)] = {
             "data": correlated_data,
             "video_path": f"http://localhost:8000/uploads/{video_path.name}"
@@ -404,7 +404,7 @@ async def get_analysis(analysis_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid analysis ID format")
 
 
-def correlate_analysis(emotions, gestures, transcript, llm_insights):
+def correlate_analysis(emotions, gestures, transcript, llm_insights, total_duration=None):
     """
     Correlate all analysis streams with timestamps
 
@@ -413,17 +413,24 @@ def correlate_analysis(emotions, gestures, transcript, llm_insights):
         gestures: List of gesture detections with timestamps
         transcript: Transcribed text with timestamps
         llm_insights: LLM-generated insights
+        total_duration: Actual video duration (if not provided, calculated from emotions)
 
     Returns:
         Integrated analysis data
     """
+    # Use provided duration or fallback to calculating from emotion timestamps
+    if total_duration is None:
+        total_duration = round(max([e["time"] for e in emotions])) if emotions else 0
+    else:
+        total_duration = round(total_duration)
+
     return {
         "emotions": emotions,
         "gestures": gestures,
         "transcript": transcript,
         "llm_insights": llm_insights,
         "summary": {
-            "total_duration": round(max([e["time"] for e in emotions])) if emotions else 0,
+            "total_duration": total_duration,
             "emotional_range": list(set([e["emotion"] for e in emotions])),
             "key_moments": identify_key_moments(emotions, gestures, transcript),
             "top_themes": llm_insights.get("main_topics", []),

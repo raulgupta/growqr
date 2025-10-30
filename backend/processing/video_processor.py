@@ -30,6 +30,23 @@ class VideoProcessor:
             min_detection_confidence=0.5
         )
 
+    def get_video_duration(self, video_path: str) -> float:
+        """
+        Get the actual duration of the video in seconds
+
+        Args:
+            video_path: Path to video file
+
+        Returns:
+            Video duration in seconds
+        """
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration = frame_count / fps if fps > 0 else 0
+        cap.release()
+        return duration
+
     def analyze_emotions(self, video_path: str) -> List[Dict]:
         """
         Analyze facial emotions throughout the video
