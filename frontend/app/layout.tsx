@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { QrCode, ExternalLink, BookOpen, Shield } from "lucide-react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,6 +28,7 @@ function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <QrCode className="text-blue-600 dark:text-blue-500" size={28} />
             <div className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Growqr
             </div>
@@ -34,15 +36,17 @@ function Header() {
           <nav className="flex items-center gap-6">
             <Link
               href="/"
-              className="text-sm text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
+              <QrCode size={18} />
               Home
             </Link>
             <Link
               href="https://github.com/raulgupta/growqr"
               target="_blank"
-              className="text-sm text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
+              <ExternalLink size={18} />
               GitHub
             </Link>
           </nav>
@@ -57,7 +61,7 @@ function Footer() {
     <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-sm text-slate-600 dark:text-slate-400">
+          <div className="text-sm font-bold text-blue-600 dark:text-blue-500">
             &copy; {new Date().getFullYear()} Growqr. AI-powered video analysis.
           </div>
           <div className="flex items-center gap-6">
@@ -65,20 +69,23 @@ function Footer() {
               href="https://github.com/raulgupta/growqr"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
+              <ExternalLink size={16} />
               GitHub
             </a>
             <a
               href="#"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
+              <BookOpen size={16} />
               Documentation
             </a>
             <a
               href="#"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-500 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
             >
+              <Shield size={16} />
               Privacy
             </a>
           </div>

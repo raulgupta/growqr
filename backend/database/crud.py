@@ -303,13 +303,13 @@ def create_llm_insight(
     """
     insight = LLMInsight(
         analysis_id=analysis_id,
-        main_topics=insights_data["main_topics"],
-        rhetorical_techniques=insights_data["rhetorical_techniques"],
+        main_topics=insights_data.get("main_topics", []),
+        rhetorical_techniques=insights_data.get("rhetorical_techniques", []),
         argument_structure=insights_data.get("argument_structure", ""),
-        persuasive_elements=insights_data["persuasive_elements"],
-        persuasion_score=insights_data["persuasion_score"],
-        overall_tone=insights_data["overall_tone"],
-        transcript_summary=insights_data["transcript_summary"],
+        persuasive_elements=insights_data.get("persuasive_elements", []),
+        persuasion_score=insights_data.get("persuasion_score", 5.0),
+        overall_tone=insights_data.get("overall_tone", "Neutral"),
+        transcript_summary=insights_data.get("transcript_summary", ""),
     )
     db.add(insight)
     db.commit()

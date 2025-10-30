@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { QrCode } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 // TypeScript interfaces for analysis data
@@ -168,7 +169,11 @@ export default function AnalysisPage() {
   }, [analysisData?.gestures, currentTime]);
 
   // Get unique emotions and map them to Y-axis values (memoized to avoid recalculation)
-  const emotionChartData = analysisData ? (() => {
+  const emotionChartData = useMemo(() => {
+    if (!analysisData?.emotions) {
+      return { data: [], emotionMap: {}, uniqueEmotions: [] };
+    }
+
     const uniqueEmotions = Array.from(new Set(analysisData.emotions.map(e => e.emotion)));
     const emotionMap: { [key: string]: number } = {};
     uniqueEmotions.forEach((emotion, index) => {
@@ -184,7 +189,7 @@ export default function AnalysisPage() {
     }));
 
     return { data: chartData, emotionMap, uniqueEmotions };
-  })() : { data: [], emotionMap: {}, uniqueEmotions: [] };
+  }, [analysisData?.emotions]);
 
   if (loading) {
     return (
@@ -213,20 +218,23 @@ export default function AnalysisPage() {
   return (
     <div>
       {/* Page Header */}
-      <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="container mx-auto px-4 py-6">
+      <div className="bg-white/80 dark:bg-slate-800/80 border-b border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Analysis Dashboard
+            <div className="flex items-center gap-3">
+              <h1 className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                Analysis
               </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                ID: {params.id}
-              </p>
+              <div className="flex items-center gap-2">
+                <QrCode size={14} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                  {params.id}
+                </span>
+              </div>
             </div>
             <Link
               href="/"
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               New Analysis
             </Link>
@@ -529,9 +537,37 @@ export default function AnalysisPage() {
                 <h2 className="text-xl font-semibold mb-4 text-blue-600 dark:text-blue-500">
                   AI Summary
                 </h2>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                  {analysisData.llm_insights.transcript_summary}
-                </p>
+                <div className="space-y-3">
+                  {analysisData.llm_insights.transcript_summary
+                    .split(/[.!?]+/)
+                    .filter((s: string) => s.trim().length > 20)
+                    .slice(0, 4)
+                    .map((sentence: string, i: number) => {
+                      // Clean up the sentence
+                      let cleaned = sentence.trim();
+                      // Remove leading punctuation (commas, quotes, etc)
+                      cleaned = cleaned.replace(/^[,;:"\s]+/, '');
+                      // Capitalize first letter
+                      if (cleaned.length > 0) {
+                        cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+                      }
+                      // Add period at end if not present
+                      const withPeriod = cleaned.endsWith('.') || cleaned.endsWith('!') || cleaned.endsWith('?')
+                        ? cleaned
+                        : cleaned + '.';
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
+                        >
+                          <span className="text-blue-500 mt-0.5 shrink-0">•</span>
+                          <span className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                            {withPeriod}
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             )}
           </div>

@@ -127,18 +127,9 @@ export default function Home() {
   return (
     <div className="container mx-auto px-4 py-16">
       {/* Hero Section */}
-      <div className="relative mx-auto mb-16 flex max-w-7xl flex-col items-center justify-center">
-        <div className="absolute inset-y-0 left-0 h-full w-px bg-neutral-200/80 dark:bg-neutral-800/80">
-          <div className="absolute top-0 h-40 w-px bg-linear-to-b from-transparent via-blue-500 to-transparent" />
-        </div>
-        <div className="absolute inset-y-0 right-0 h-full w-px bg-neutral-200/80 dark:bg-neutral-800/80">
-          <div className="absolute h-40 w-px bg-linear-to-b from-transparent via-blue-500 to-transparent" />
-        </div>
-        <div className="absolute inset-x-0 bottom-0 h-px w-full bg-neutral-200/80 dark:bg-neutral-800/80">
-          <div className="absolute mx-auto h-px w-40 bg-linear-to-r from-transparent via-blue-500 to-transparent" />
-        </div>
-        <div className="px-4 py-10 md:py-20">
-          <h1 className="relative z-10 mx-auto max-w-4xl text-center text-2xl font-bold text-slate-700 md:text-4xl lg:text-7xl dark:text-slate-300">
+      <div className="max-w-5xl mx-auto mb-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl py-16 px-8">
+          <h1 className="mx-auto max-w-4xl text-center text-2xl font-bold text-slate-700 md:text-4xl lg:text-5xl dark:text-slate-300 mb-4">
             {"AI-Powered Video Analysis"
               .split(" ")
               .map((word, index) => (
@@ -168,7 +159,7 @@ export default function Home() {
               duration: 0.3,
               delay: 0.4,
             }}
-            className="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal text-neutral-600 dark:text-neutral-400"
+            className="mx-auto max-w-xl text-center text-base font-normal text-neutral-600 dark:text-neutral-400"
           >
             Analyze speaker emotions, gestures, and content using AI-powered computer vision and natural language processing
           </motion.p>
@@ -197,44 +188,12 @@ export default function Home() {
             </form>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow">
-              <div className="text-3xl mb-3">😀</div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Emotion Analysis
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Track facial expressions and emotional journey throughout the video
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow">
-              <div className="text-3xl mb-3">👐</div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Gesture Tracking
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Analyze body language, hand movements, and overall presence
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow">
-              <div className="text-3xl mb-3">🧠</div>
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Content Insights
-              </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                AI-powered analysis of speech patterns, themes, and key messages
-              </p>
-            </div>
-          </div>
         </div>
 
         {/* Progress Modal */}
         {uploading && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-blue-500 dark:text-white">
                   Analyzing Your Video
@@ -260,7 +219,7 @@ export default function Home() {
                     return (
                       <div
                         key={index}
-                        className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg animate-fadeIn"
+                        className="flex items-start gap-3 p-4 bg-white/90 dark:bg-slate-800/90 rounded-xl animate-fadeIn shadow-[2px_2px_8px_rgba(0,0,0,0.06),-2px_-2px_8px_rgba(255,255,255,0.5)] dark:shadow-[2px_2px_8px_rgba(0,0,0,0.3),-2px_-2px_8px_rgba(255,255,255,0.02)]"
                       >
                         <div className="text-lg shrink-0">{message.split(' ')[0]}</div>
                         <div className="flex-1 text-sm text-slate-700 dark:text-slate-300">
